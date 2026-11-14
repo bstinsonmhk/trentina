@@ -10,6 +10,18 @@ under that name.
 
 ## [Unreleased]
 
+### Fixed
+- **A lone surrogate no longer leaves content unjudged.** A `str` can hold half
+  of a surrogate pair (JSON's `"\ud83d"` decodes to one, and so does text cut in
+  the middle of an escaped emoji). The fast tokenizer takes UTF-8, which cannot
+  encode it, and answered the whole string with a `TypeError`: admission's
+  token count failed, the scan was recorded as failed, and under `flag` the
+  content went through unjudged (under `block` it was refused). On the LLM
+  proxy one such character in a conversation's history did this to every later
+  request. Layer 2's tokenizer calls now replace each lone surrogate with
+  U+FFFD, one for one, so counts, `head` and `token_starts` still describe the
+  caller's text.
+
 ## [6.22.0] - 2026-11-12
 
 ### Added
